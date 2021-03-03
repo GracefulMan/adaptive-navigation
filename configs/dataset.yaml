@@ -1,11 +1,11 @@
-DATA_PATH:
-  TRAIN_DATA_PATH: "dataset/train"
-  TEST_DATA_PATH: "dataset/test"
+data_path:
+  train_data_path: "dataset/train"
+  test_data_path: "dataset/test"
 
-IMAGE_SIZE:
-  HEIGHT: 224
-  WIDTH: 224
+image_size:
+  height: 224
+  width: 224
 
-NODE:
-  IMAGE_NUMS: 10
-  SAMPLING_INTERVAL: 50
+node:
+  image_nums: 10
+  sampling_interval: 50

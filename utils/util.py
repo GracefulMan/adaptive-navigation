@@ -26,6 +26,16 @@ def load_dataset_yaml() -> dict:
     return data
 
 
+def load_logger_yaml() -> dict:
+    '''
+    load logger configs file.
+    :return: data. type: dict.
+    '''
+    path= 'configs/logger.yaml'
+    data = load_yaml_file(path)
+    return data
+
+
 if __name__ == '__main__':
     load_dataset_yaml()
 

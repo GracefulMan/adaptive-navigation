@@ -1,0 +1,6 @@
+root_path: "output/log_file/"
+scene:
+  env: "env.log"
+  rl: "rl.log"
+
+

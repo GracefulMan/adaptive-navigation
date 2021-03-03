@@ -1,7 +1,7 @@
 '''
 class for load dataset.
 '''
-from env.utils import load_dataset_yaml
+from utils.util import load_dataset_yaml
 
 dataset_configs = load_dataset_yaml()
 
