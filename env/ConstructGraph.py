@@ -2,10 +2,9 @@
 this class including node class and graph class.
 '''
 
-from typing import List, Dict
+from typing import List, Dict, Any,Set
 from utils.util import load_dataset_yaml
-from utils.logger import Logger
-from env.datasets import DatasetLoader
+from env.datasets import DatasetLoader, logger
 import numpy as np
 import copy
 import random
@@ -13,35 +12,72 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import os
 import datetime
+import json
 
 config_data = load_dataset_yaml()
+
 
 class Node:
     '''
     each node contains images for each season.
     '''
     def __init__(self, id:int = 0) -> None:
-        self.imgs = {}
-        self.id = id
+        self._imgs = {}
+        self._id = id
 
     def load_imgs(self, imgs: dict) -> None:
-        self.imgs = copy.copy(imgs)
+        self._imgs = copy.copy(imgs)
 
     def get_season_imgs(self, season: str) -> np.ndarray:
-        return self.imgs[season]
+        return self._imgs[season]
+
+    @property
+    def id(self) -> int:
+        return self._id
+
+    @property
+    def imgs(self) -> Dict[str, np.ndarray]:
+        return self._imgs
 
 
 class Graph:
-
-    def __init__(self) -> None:
-        self.node_nums = config_data['graph']['node_nums']
+    def __init__(self, preload=True) -> None:
+        self._node_nums = config_data['graph']['node_nums']
         self.img_save_path = config_data['graph']['img_save_path']
-        self.graph = self._generate_random_graph(self.node_nums)
+        self.graph = self._generate_random_graph(self._node_nums) if not preload else self._load_graph()
         self.image_graph = None
-        self.datasets = DatasetLoader()
+        self._datasets = DatasetLoader()
+        self.img_graph = {}
+        self._create_graph()
+        self._current_pos = 0
+        self._explored = []
+
+    def get_data_by_index(self, index, season = None) -> Any:
+        if season is None:
+            return self.img_graph[index].imgs
+        else:
+            return self.img_graph[index].get_season_imgs(season)
+
+    def _get_edge_nums(self) -> int:
+        '''
+        get total number of edges.
+        :return:
+        '''
+        tmp = list(self.graph.values())
+        res = 0
+        for item in tmp:
+            res += len(item)
+        return res//2
 
     def _create_graph(self) -> None:
-        pass
+        self._node_nums = min(self._node_nums, self._datasets.img_nums)
+        for key in self.graph.keys():
+            key = int(key)
+            imgs = self._datasets.get_all_season_for_one_node(key)
+            tmpNode = Node(id=key)
+            tmpNode.load_imgs(imgs)
+            self.img_graph[key] = tmpNode
+        logger.info("Construct Graph complete. Total nodes:{}, Total edges:{}".format(self._node_nums, self._get_edge_nums()))
 
     def _generate_random_graph(self,node_nums: int) -> Dict[int, List]:
         """
@@ -84,10 +120,56 @@ class Graph:
         time_now = datetime.datetime.now()
         save_path = os.path.join(self.img_save_path, time_now.strftime("%Y_%m_%d_%H_%M_%S") + ".png")
         for key, values in self.graph.items():
+            key = int(key)
             for edge in values:
                 G.add_edge(key, edge)
         nx.draw(G, pos=nx.spring_layout(G), node_color = 'w',edge_color = 'r',with_labels = True, font_size =10,node_size =40,alpha=0.7)
         plt.savefig(save_path)
+
+    @property
+    def current_id(self) -> int:
+        return self._current_pos
+
+    @property
+    def current_img(self) -> Dict[str, np.ndarray]:
+        return self.get_data_by_index(self.current_id)
+
+    @property
+    def explored(self) -> List:
+        return self._explored
+
+    def move(self, id: int) -> None:
+        assert id in self.graph[self.current_id], logger.error("current node {} doesn't connect with node {}".format(self.current_id, id))
+        self._current_pos = id
+        #TODO: explore node
+        ex_format = ""
+
+
+    def get_connected_node(self) -> List:
+        return sorted(self.graph[self.current_id])
+
+    def _load_graph(self) -> Dict[int, List]:
+        graph_dir = config_data['graph']['predefine_graph_path']
+        graph_path = os.path.join(graph_dir, 'graph.json')
+        logger.info("Loading graph from path: {}".format(graph_path))
+        if not os.path.exists(graph_path):
+            os.makedirs(graph_dir)
+            graph = self._generate_random_graph(self._node_nums)
+            with open(graph_path, 'w') as f:
+                json.dump(graph, f)
+            return graph
+        with open(graph_path, 'r') as f:
+            graph = json.load(f)
+        return graph
+
+    def plot_explore_graph(self):
+        #TODO:explore graph.
+        pass
+
+
+
+
+
 
 
 
@@ -100,8 +182,16 @@ class Graph:
 
 
 if __name__ == "__main__":
-    graph = Graph()
+    graph = Graph(preload=True)
     graph.plot_graph()
+    id = graph.current_id
+    print(id)
+    tmp = graph.get_connected_node()
+    print(tmp)
+    graph.move(tmp[0])
+    img = graph.current_img
+    print(img)
+
 
 
 

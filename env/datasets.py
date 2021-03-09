@@ -26,13 +26,13 @@ class DatasetLoader:
         self.per_node_image_nums = dataset_configs['node']['image_nums']
         # the interval between two nodes.
         self.sample_interval = dataset_configs['node']['sampling_interval']
-
         self.img_size = (dataset_configs['image']['width'], dataset_configs['image']['height'])
         self.imgs_path = {} # all path of images. {'spring':[[1,2,3, ...], [50, 51, ...],...],'summer':[[],[],...]}
         self.imgs = {} # all images. {'spring':[(batch, h, w, 3), (batch, h, w, 3)], 'summer':[]} or list.
         # get all path of images.
         self._get_all_path_for_datasets()
         self._load_image_to_memory()
+        self._img_nums = 0
 
     def _get_all_path_for_datasets(self) -> None:
         folder_base_name = "/{}_images_test/*/*.png"
@@ -83,26 +83,38 @@ class DatasetLoader:
                 self.imgs[key].append(tmp)
         logger.info('dataset loading completed...')
 
-    def get_all_season_for_one_node(self, node: int, visualize: bool=False) -> np.ndarray:
+    def visualize_all_season_for_one_node(self, node_id: int) -> None:
         # load image save path
         save_path = dataset_configs['image']['vis_img_save_path']
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         time_now = datetime.datetime.now()
         save_path = os.path.join(save_path, time_now.strftime("%Y_%m_%d_%H_%M_%S") + ".png")
-
         seasons = ['fall', 'spring', 'summer', 'winter']
         res = np.empty((self.per_node_image_nums, 0, self.img_size[1], 3))
         for season in seasons:
-            tmp = self.imgs[season][node]
+            tmp = self.imgs[season][node_id]
             res = np.hstack((res, tmp))
-        if visualize:
-            save_image(res, save_path)
+        save_image(res, save_path)
+
+    def get_all_season_for_one_node(self, node_id: int) -> Dict[str, np.ndarray]:
+        '''
+        :param node_id: the index of img for one season.
+        :return: imgs dict. type : dict:{'spring':np.ndarray, ...}
+        '''
+        seasons = ['fall', 'spring', 'summer', 'winter']
+        res = {}
+        for key in seasons:
+            res[key] = self.imgs[key][node_id]
         return res
 
-
-
+    @property
+    def img_nums(self):
+        self._img_nums = len(self.imgs['fall'])
+        return self._img_nums
 
 if __name__ == "__main__":
     dataloader = DatasetLoader()
-    dataloader.get_all_season_for_one_node(1, True)
+    res = dataloader.get_all_season_for_one_node(1)
+    print(res)
+    print(dataloader.img_nums)

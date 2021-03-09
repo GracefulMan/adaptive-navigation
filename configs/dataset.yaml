@@ -15,3 +15,4 @@ node:
 graph:
   node_nums: 10
   img_save_path: "output/graph/"
+  predefine_graph_path: "cache/graph/"
