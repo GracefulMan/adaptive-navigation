@@ -1,0 +1,5 @@
+PyYAML==5.4.1
+matplotlib==3.3.2
+numpy==1.19.4
+networkx==2.5
+opencv_python==4.4.0.46
