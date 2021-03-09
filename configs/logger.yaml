@@ -1,3 +1,4 @@
+log_level: "INFO" # include: "INFO, WARNING, DEBUG, ERROR"
 root_path: "output/log_file/"
 scene:
   env: "env.log"

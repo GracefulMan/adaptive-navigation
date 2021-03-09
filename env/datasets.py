@@ -5,10 +5,11 @@ from utils.util import load_dataset_yaml
 from typing import Dict, List
 from glob import glob
 from utils.logger import Logger
-from env.env_utils import show_image
+from env.env_utils import save_image
 import numpy as np
 import cv2
-
+import datetime
+import os
 
 dataset_configs = load_dataset_yaml()
 logger = Logger(env='env').logger
@@ -26,7 +27,7 @@ class DatasetLoader:
         # the interval between two nodes.
         self.sample_interval = dataset_configs['node']['sampling_interval']
 
-        self.img_size = (dataset_configs['image_size']['width'], dataset_configs['image_size']['height'])
+        self.img_size = (dataset_configs['image']['width'], dataset_configs['image']['height'])
         self.imgs_path = {} # all path of images. {'spring':[[1,2,3, ...], [50, 51, ...],...],'summer':[[],[],...]}
         self.imgs = {} # all images. {'spring':[(batch, h, w, 3), (batch, h, w, 3)], 'summer':[]} or list.
         # get all path of images.
@@ -83,13 +84,20 @@ class DatasetLoader:
         logger.info('dataset loading completed...')
 
     def get_all_season_for_one_node(self, node: int, visualize: bool=False) -> np.ndarray:
+        # load image save path
+        save_path = dataset_configs['image']['vis_img_save_path']
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+        time_now = datetime.datetime.now()
+        save_path = os.path.join(save_path, time_now.strftime("%Y_%m_%d_%H_%M_%S") + ".png")
+
         seasons = ['fall', 'spring', 'summer', 'winter']
         res = np.empty((self.per_node_image_nums, 0, self.img_size[1], 3))
         for season in seasons:
             tmp = self.imgs[season][node]
             res = np.hstack((res, tmp))
         if visualize:
-            show_image(res)
+            save_image(res, save_path)
         return res
 
 
@@ -97,4 +105,4 @@ class DatasetLoader:
 
 if __name__ == "__main__":
     dataloader = DatasetLoader()
-    dataloader.get_all_season_for_one_node(32, True)
+    dataloader.get_all_season_for_one_node(1, True)

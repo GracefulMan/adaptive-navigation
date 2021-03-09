@@ -14,13 +14,32 @@ class Logger:
         self.file_handle = None
         self.console_handle = None
         self._create_logger()
+        self._get_log_level()
         formatter = logging.Formatter('[{}] %(asctime)s %(pathname)s[line:%(lineno)d] %(levelname)s - %(message)s'.format(self.env))
-        self.file_handle.setLevel(logging.DEBUG)
-        self.console_handle.setLevel(logging.DEBUG)
+        self.file_handle.setLevel(self.logger_level)
+        self.console_handle.setLevel(self.logger_level)
         self.file_handle.setFormatter(formatter)
         self.console_handle.setFormatter(formatter)
         self.logger.addHandler(self.file_handle)
         self.logger.addHandler(self.console_handle)
+
+    def _get_log_level(self):
+        '''
+        get log level from yaml file.
+        :return:
+        '''
+        level_dict = {
+            "WARNING": logging.WARNING,
+            "INFO": logging.INFO,
+            "ERROR": logging.ERROR,
+            "DEBUG": logging.DEBUG
+        }
+
+        level_key = self.logger_yaml['log_level']
+        self.logger_level = level_dict[level_key]
+
+
+
 
     def _create_logger(self) -> None:
         if self.env not in self.logger_yaml['scene'].keys():
