@@ -50,7 +50,8 @@ class Graph:
         self.img_graph = {}
         self._create_graph()
         self._current_pos = 0
-        self._explored = []
+        self._explored = {}
+        self._pos = None
 
     def get_data_by_index(self, index, season = None) -> Any:
         if season is None:
@@ -72,7 +73,6 @@ class Graph:
     def _create_graph(self) -> None:
         self._node_nums = min(self._node_nums, self._datasets.img_nums)
         for key in self.graph.keys():
-            key = int(key)
             imgs = self._datasets.get_all_season_for_one_node(key)
             tmpNode = Node(id=key)
             tmpNode.load_imgs(imgs)
@@ -94,7 +94,6 @@ class Graph:
             number -= 1
             if number == 0:
                 break
-        # print(node_list)
 
         for node in node_list:
             graph[node] = []  # graph为dict结构，初始化为空列表
@@ -120,10 +119,10 @@ class Graph:
         time_now = datetime.datetime.now()
         save_path = os.path.join(self.img_save_path, time_now.strftime("%Y_%m_%d_%H_%M_%S") + ".png")
         for key, values in self.graph.items():
-            key = int(key)
             for edge in values:
                 G.add_edge(key, edge)
-        nx.draw(G, pos=nx.spring_layout(G), node_color = 'w',edge_color = 'r',with_labels = True, font_size =10,node_size =40,alpha=0.7)
+        self._pos = nx.spring_layout(G) if self._pos is None else self._pos
+        nx.draw(G, pos=self._pos, node_color = 'w',edge_color = 'r',with_labels = True, font_size =10,node_size =40,alpha=0.7)
         plt.savefig(save_path)
 
     @property
@@ -135,15 +134,18 @@ class Graph:
         return self.get_data_by_index(self.current_id)
 
     @property
-    def explored(self) -> List:
+    def explored(self) -> Dict[int, Set]:
         return self._explored
 
     def move(self, id: int) -> None:
+        print(self._explored)
         assert id in self.graph[self.current_id], logger.error("current node {} doesn't connect with node {}".format(self.current_id, id))
+        # add to explore edge.
+        if self._current_pos not in self._explored.keys():
+            self._explored[self._current_pos] = set([id])
+        else:
+            self._explored[self._current_pos].add(id)
         self._current_pos = id
-        #TODO: explore node
-        ex_format = ""
-
 
     def get_connected_node(self) -> List:
         return sorted(self.graph[self.current_id])
@@ -160,12 +162,30 @@ class Graph:
             return graph
         with open(graph_path, 'r') as f:
             graph = json.load(f)
+        # change key type from str to int
+        for key in sorted(graph.keys()):
+            graph.update({int(key): sorted(graph.pop(key))})
         return graph
 
     def plot_explore_graph(self):
-        #TODO:explore graph.
-        pass
-
+        #explore graph.
+        G = nx.Graph()
+        added_edge = {}
+        for key, values in self.graph.items():
+            for edge in values:
+                G.add_edge(key, edge, color='b' if (key in self._explored.keys() and edge in self._explored[key]
+                ) else 'r')
+        edges, colors = zip(*nx.get_edge_attributes(G, 'color').items())
+        self._pos = nx.spring_layout(G) if self._pos is None else self._pos
+        nx.draw(G, pos=self._pos, edgelist=edges,edge_color=colors, node_color ='w', with_labels=True, font_size =10,node_size =40,alpha=0.7)
+        plt.title('Explored Topological Graph')
+        #save figure.
+        if not os.path.exists(self.img_save_path):
+            os.makedirs(self.img_save_path)
+        # use current time to form save path.
+        time_now = datetime.datetime.now()
+        save_path = os.path.join(self.img_save_path, time_now.strftime("%Y_%m_%d_%H_%M_%S") + "_explored.png")
+        plt.savefig(save_path)
 
 
 
@@ -185,12 +205,26 @@ if __name__ == "__main__":
     graph = Graph(preload=True)
     graph.plot_graph()
     id = graph.current_id
-    print(id)
     tmp = graph.get_connected_node()
-    print(tmp)
-    graph.move(tmp[0])
-    img = graph.current_img
-    print(img)
+    graph.move(random.choice(tmp))
+    tmp = graph.get_connected_node()
+    graph.move(random.choice(tmp))
+    tmp = graph.get_connected_node()
+    graph.move(random.choice(tmp))
+    tmp = graph.get_connected_node()
+    graph.move(random.choice(tmp))
+    tmp = graph.get_connected_node()
+    graph.move(random.choice(tmp))
+    tmp = graph.get_connected_node()
+    graph.move(random.choice(tmp))
+    tmp = graph.get_connected_node()
+    graph.move(random.choice(tmp))
+    tmp = graph.get_connected_node()
+    graph.move(random.choice(tmp))
+    tmp = graph.get_connected_node()
+    graph.move(random.choice(tmp))
+    graph.plot_explore_graph()
+
 
 
 
