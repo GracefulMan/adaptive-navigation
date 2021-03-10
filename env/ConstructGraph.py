@@ -170,11 +170,16 @@ class Graph:
     def plot_explore_graph(self):
         #explore graph.
         G = nx.Graph()
-        added_edge = {}
+        blued = set([])
         for key, values in self.graph.items():
             for edge in values:
-                G.add_edge(key, edge, color='b' if (key in self._explored.keys() and edge in self._explored[key]
-                ) else 'r')
+                if key in self._explored.keys() and edge in self._explored[key]:
+                    G.add_edge(key, edge, color='b')
+                    blued.add("{}-{}".format(key, edge))
+                    blued.add("{}-{}".format(edge, key))
+                else:
+                    if "{}-{}".format(key, edge) not in blued:
+                        G.add_edge(key, edge, color='r')
         edges, colors = zip(*nx.get_edge_attributes(G, 'color').items())
         self._pos = nx.spring_layout(G) if self._pos is None else self._pos
         nx.draw(G, pos=self._pos, edgelist=edges,edge_color=colors, node_color ='w', with_labels=True, font_size =10,node_size =40,alpha=0.7)
