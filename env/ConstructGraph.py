@@ -53,6 +53,10 @@ class Graph:
         self._explored = {}
         self._pos = None
 
+    def reset(self):
+        self._current_pos = 0
+        self._explored = {}
+
     def get_data_by_index(self, index, season = None) -> Any:
         if season is None:
             return self.img_graph[index].imgs
@@ -138,7 +142,6 @@ class Graph:
         return self._explored
 
     def move(self, id: int) -> None:
-        print(self._explored)
         assert id in self.graph[self.current_id], logger.error("current node {} doesn't connect with node {}".format(self.current_id, id))
         # add to explore edge.
         if self._current_pos not in self._explored.keys():
@@ -191,6 +194,7 @@ class Graph:
         time_now = datetime.datetime.now()
         save_path = os.path.join(self.img_save_path, time_now.strftime("%Y_%m_%d_%H_%M_%S") + "_explored.png")
         plt.savefig(save_path)
+
 
 
 

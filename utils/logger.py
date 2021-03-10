@@ -45,8 +45,8 @@ class Logger:
         if self.env not in self.logger_yaml['scene'].keys():
             raise OSError('No such scene yaml file:{}'.format(self.env))
         log_path = os.path.join(self.logger_yaml['root_path'], self.logger_yaml['scene'][self.env])
-        if not os.path.exists(log_path):
-            os.makedirs(log_path)
+        if not os.path.exists(self.logger_yaml['root_path']):
+            os.mkdir(self.logger_yaml['root_path'])
         self.file_handle = logging.FileHandler(log_path, encoding='utf-8')
         self.console_handle = logging.StreamHandler()
 
