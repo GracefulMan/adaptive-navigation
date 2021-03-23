@@ -6,7 +6,7 @@ from typing import Dict, Tuple,List
 import numpy as np
 
 class SeasonEnv:
-    def __init__(self, preload:bool=True):
+    def __init__(self, preload: bool=True):
         logger.info('-'*30 + "ENV INIT" + "-"*30)
         self._graph = Graph(preload=preload)
         logger.info('_'*30 + "ENV INIT COMPLETE" + "-"* 30)
@@ -53,14 +53,11 @@ class SeasonEnv:
         self._graph.plot_explore_graph()
 
 
-
-
-
-
-
 if __name__ == '__main__':
     env = SeasonEnv()
     obs, actions = env.reset()
+    print(obs)
+    print(actions)
     n = 10
     import random
 
