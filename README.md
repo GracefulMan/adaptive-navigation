@@ -1,2 +1,12 @@
 # adaptive-navigation
-visual apaptive navigation
+
+## Modules
+
+* Env
+    * gym style
+    * graph visualization
+
+* Reinforcement Learning Algorithm
+
+    
+
